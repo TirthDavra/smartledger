@@ -1,3 +1,4 @@
+import type { NextAuthOptions } from "next-auth";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
@@ -5,7 +6,7 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/user.model";
 
-export const auth = NextAuth({
+export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
@@ -50,11 +51,28 @@ export const auth = NextAuth({
     }),
   ],
 
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
+  },
+
   pages: {
     signIn: "/login",
   },
 
   secret: process.env.AUTH_SECRET,
-});
+};
+
+export const auth = NextAuth(authOptions);
 
 export default auth;
