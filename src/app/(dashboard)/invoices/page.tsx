@@ -5,6 +5,7 @@ import { getUserInvoices } from "@/actions/invoice.actions";
 import InvoiceForm from "@/components/invoices/invoice-form";
 import InvoiceTable from "@/components/invoices/invoice-table";
 import SectionHeader from "@/components/dashboard/section-header";
+import { formatInr } from "@/lib/format-currency";
 import { getTaxRateFromAmounts } from "@/lib/serialize-invoice";
 import type { InvoiceFormOutput } from "@/schemas/invoice.schema";
 import { Input } from "@/components/ui/input";
@@ -173,7 +174,7 @@ export default function InvoicesPage() {
                       Paid Revenue
                     </p>
                     <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                      ${totalRevenue.toFixed(2)}
+                      {formatInr(totalRevenue)}
                     </p>
                   </div>
                   <div>
@@ -181,7 +182,7 @@ export default function InvoicesPage() {
                       Outstanding
                     </p>
                     <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      ${outstandingTotal.toFixed(2)}
+                      {formatInr(outstandingTotal)}
                     </p>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400">

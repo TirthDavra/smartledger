@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatInr } from "@/lib/format-currency";
 import { toast } from "sonner";
 
 const STATUS_OPTIONS = [
@@ -333,19 +334,19 @@ export default function InvoiceForm({
               <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
                 <span>Subtotal</span>
                 <span className="font-medium text-slate-900 dark:text-slate-100">
-                  ${totals.subtotal.toFixed(2)}
+                  {formatInr(totals.subtotal)}
                 </span>
               </div>
               <div className="mt-2 flex justify-between text-sm text-slate-600 dark:text-slate-400">
                 <span>Tax</span>
                 <span className="font-medium text-slate-900 dark:text-slate-100">
-                  ${totals.tax.toFixed(2)}
+                  {formatInr(totals.tax)}
                 </span>
               </div>
               <div className="mt-2 flex justify-between border-t border-slate-200/70 pt-2 text-sm font-semibold dark:border-slate-800/70">
                 <span className="text-slate-900 dark:text-slate-100">Total</span>
                 <span className="text-slate-900 dark:text-slate-100">
-                  ${totals.total.toFixed(2)}
+                  {formatInr(totals.total)}
                 </span>
               </div>
             </div>

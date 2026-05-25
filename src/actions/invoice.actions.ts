@@ -20,7 +20,7 @@ function buildInvoicePayload(
 
   return {
     clientName: data.clientName,
-    invoiceNumber: data.invoiceNumber,
+    invoiceNumber: data.invoiceNumber.trim(),
     status: data.status,
     issueDate: data.issueDate,
     dueDate: data.dueDate,
@@ -29,6 +29,33 @@ function buildInvoicePayload(
     tax,
     total,
   };
+}
+
+async function isInvoiceNumberTaken(
+  userId: string,
+  invoiceNumber: string,
+  excludeInvoiceId?: string
+) {
+  const query: Record<string, unknown> = {
+    userId,
+    invoiceNumber: invoiceNumber.trim(),
+  };
+
+  if (excludeInvoiceId) {
+    query._id = { $ne: excludeInvoiceId };
+  }
+
+  const existing = await Invoice.findOne(query).select("_id").lean();
+  return Boolean(existing);
+}
+
+function isDuplicateKeyError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: number }).code === 11000
+  );
 }
 
 export async function createInvoice(data: unknown) {
@@ -47,13 +74,22 @@ export async function createInvoice(data: unknown) {
 
     await connectDB();
 
+    const payload = buildInvoicePayload(validatedFields.data);
+
+    if (await isInvoiceNumberTaken(session.user.id, payload.invoiceNumber)) {
+      return { error: "Invoice number already exists" };
+    }
+
     const invoice = await Invoice.create({
-      ...buildInvoicePayload(validatedFields.data),
+      ...payload,
       userId: session.user.id,
     });
 
     return { success: true, data: serializeInvoice(invoice) };
   } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      return { error: "Invoice number already exists" };
+    }
     console.error("Create invoice error:", error);
     return { error: "Failed to create invoice" };
   }
@@ -85,9 +121,15 @@ export async function updateInvoice(id: string, data: unknown) {
       return { error: "Unauthorized" };
     }
 
+    const payload = buildInvoicePayload(validatedFields.data);
+
+    if (await isInvoiceNumberTaken(session.user.id, payload.invoiceNumber, id)) {
+      return { error: "Invoice number already exists" };
+    }
+
     const updatedInvoice = await Invoice.findByIdAndUpdate(
       id,
-      buildInvoicePayload(validatedFields.data),
+      payload,
       { new: true }
     );
 
@@ -97,6 +139,9 @@ export async function updateInvoice(id: string, data: unknown) {
 
     return { success: true, data: serializeInvoice(updatedInvoice) };
   } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      return { error: "Invoice number already exists" };
+    }
     console.error("Update invoice error:", error);
     return { error: "Failed to update invoice" };
   }

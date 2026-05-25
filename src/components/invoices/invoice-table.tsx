@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { formatInr } from "@/lib/format-currency";
 import DeleteInvoiceDialog from "./delete-invoice-dialog";
 import type { InvoiceFormOutput } from "@/schemas/invoice.schema";
 
@@ -109,7 +110,7 @@ export default function InvoiceTable({
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    ${invoice.total.toFixed(2)}
+                    {formatInr(invoice.total)}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
                     {new Date(invoice.dueDate).toLocaleDateString()}
@@ -158,7 +159,7 @@ export default function InvoiceTable({
                   </p>
                 </div>
                 <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                  ${invoice.total.toFixed(2)}
+                  {formatInr(invoice.total)}
                 </p>
               </div>
               <div className="flex items-center justify-between">

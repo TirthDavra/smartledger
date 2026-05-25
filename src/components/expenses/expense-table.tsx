@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { formatInr } from "@/lib/format-currency";
 import DeleteExpenseDialog from "./delete-expense-dialog";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -103,7 +104,7 @@ export default function ExpenseTable({
                     {expense.vendor}
                   </td>
                   <td className="px-6 py-4 text-right text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    ${expense.amount.toFixed(2)}
+                    {formatInr(expense.amount)}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
                     {new Date(expense.expenseDate).toLocaleDateString()}
@@ -152,7 +153,7 @@ export default function ExpenseTable({
                   </p>
                 </div>
                 <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                  ${expense.amount.toFixed(2)}
+                  {formatInr(expense.amount)}
                 </p>
               </div>
               <div className="flex items-center justify-between">

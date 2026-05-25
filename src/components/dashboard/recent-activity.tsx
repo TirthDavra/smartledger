@@ -1,17 +1,29 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  dashboardRecentExpenses,
-  dashboardRecentInvoices,
+import type {
+  RecentExpenseItem,
+  RecentInvoiceItem,
 } from "@/constants/dashboard";
 
-const statusVariantMap: Record<"Paid" | "Pending" | "Overdue", "default" | "secondary" | "destructive"> = {
+const statusVariantMap: Record<
+  RecentInvoiceItem["status"],
+  "default" | "secondary" | "destructive"
+> = {
   Paid: "default",
   Pending: "secondary",
   Overdue: "destructive",
+  Cancelled: "secondary",
 };
 
-export default function RecentActivity() {
+interface RecentActivityProps {
+  expenses: RecentExpenseItem[];
+  invoices: RecentInvoiceItem[];
+}
+
+export default function RecentActivity({
+  expenses,
+  invoices,
+}: RecentActivityProps) {
   return (
     <section className="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
       <Card className="border border-slate-200/70 bg-white/80 shadow-sm transition hover:shadow-md dark:border-slate-800/70 dark:bg-slate-950/60">
@@ -21,18 +33,33 @@ export default function RecentActivity() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 px-5 pb-5 pt-0">
-          {dashboardRecentExpenses.map((item) => (
-            <div key={item.title} className="flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-800/80 dark:bg-slate-900/60 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-medium text-slate-900 dark:text-slate-100">{item.title}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{item.category}</p>
+          {expenses.length === 0 ? (
+            <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+              No expenses recorded yet
+            </p>
+          ) : (
+            expenses.map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-800/80 dark:bg-slate-900/60 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-slate-100">
+                    {item.title}
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {item.category}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                  <span>{item.date}</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">
+                    {item.amount}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                <span>{item.date}</span>
-                <span className="font-semibold text-slate-900 dark:text-slate-100">{item.amount}</span>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </CardContent>
       </Card>
 
@@ -43,18 +70,35 @@ export default function RecentActivity() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 px-5 pb-5 pt-0">
-          {dashboardRecentInvoices.map((item) => (
-            <div key={item.title} className="flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-800/80 dark:bg-slate-900/60 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-medium text-slate-900 dark:text-slate-100">{item.title}</p>
-                <Badge variant={statusVariantMap[item.status] ?? "default"}>{item.status}</Badge>
+          {invoices.length === 0 ? (
+            <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+              No invoices created yet
+            </p>
+          ) : (
+            invoices.map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-800/80 dark:bg-slate-900/60 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-slate-100">
+                    {item.title}
+                  </p>
+                  <Badge
+                    variant={statusVariantMap[item.status] ?? "default"}
+                  >
+                    {item.status}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                  <span>{item.dueDate}</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">
+                    {item.amount}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                <span>{item.dueDate}</span>
-                <span className="font-semibold text-slate-900 dark:text-slate-100">{item.amount}</span>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </CardContent>
       </Card>
     </section>

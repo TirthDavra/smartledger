@@ -24,7 +24,11 @@ export const lineItemSchema = z.object({
 export const invoiceFormSchema = z
   .object({
     clientName: z.string().min(1, "Client name is required").max(100),
-    invoiceNumber: z.string().min(1, "Invoice number is required").max(50),
+    invoiceNumber: z
+      .string()
+      .trim()
+      .min(1, "Invoice number is required")
+      .max(50),
     status: z.enum(INVOICE_STATUSES, { message: "Invalid status" }),
     issueDate: z.coerce.date({ message: "Issue date is required" }),
     dueDate: z.coerce.date({ message: "Due date is required" }),

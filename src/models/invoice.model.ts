@@ -82,5 +82,7 @@ const invoiceSchema = new Schema(
   }
 );
 
+invoiceSchema.index({ userId: 1, invoiceNumber: 1 }, { unique: true });
+
 export const Invoice =
   models.Invoice || model("Invoice", invoiceSchema);

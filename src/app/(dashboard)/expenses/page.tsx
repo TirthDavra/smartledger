@@ -5,6 +5,7 @@ import { getUserExpenses } from "@/actions/expense.actions";
 import ExpenseForm from "@/components/expenses/expense-form";
 import ExpenseTable from "@/components/expenses/expense-table";
 import SectionHeader from "@/components/dashboard/section-header";
+import { formatInr } from "@/lib/format-currency";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -150,7 +151,7 @@ export default function ExpensesPage() {
                     Total Expenses
                   </p>
                   <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    ${expenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2)}
+                    {formatInr(expenses.reduce((sum, e) => sum + e.amount, 0))}
                   </p>
                   <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                     {expenses.length} expenses tracked

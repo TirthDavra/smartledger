@@ -1,11 +1,36 @@
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/auth";
 import CategoryChart from "@/components/dashboard/category-chart";
 import ExpenseChart from "@/components/dashboard/expense-chart";
 import RecentActivity from "@/components/dashboard/recent-activity";
 import SectionHeader from "@/components/dashboard/section-header";
 import StatsCard from "@/components/dashboard/stats-card";
-import { dashboardStats } from "@/constants/dashboard";
+import { dashboardStatConfig } from "@/constants/dashboard";
+import {
+  formatDashboardCurrency,
+  getDashboardData,
+} from "@/lib/dashboard";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
+
+  const data = await getDashboardData(session.user.id);
+
+  const statValues: Record<
+    (typeof dashboardStatConfig)[number]["key"],
+    string
+  > = {
+    revenue: formatDashboardCurrency(data.stats.totalRevenue),
+    expenses: formatDashboardCurrency(data.stats.totalExpenses),
+    pending: String(data.stats.pendingInvoices),
+    balance: formatDashboardCurrency(data.stats.netBalance),
+  };
+
   return (
     <div className="space-y-8">
       <section className="space-y-6">
@@ -15,11 +40,11 @@ export default function DashboardPage() {
         />
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {dashboardStats.map((item) => (
+          {dashboardStatConfig.map((item) => (
             <StatsCard
-              key={item.title}
+              key={item.key}
               title={item.title}
-              value={item.value}
+              value={statValues[item.key]}
               description={item.description}
               icon={item.icon}
               iconClassName={item.iconClassName}
@@ -29,11 +54,14 @@ export default function DashboardPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
-        <ExpenseChart />
-        <CategoryChart />
+        <ExpenseChart data={data.expenseTrend} />
+        <CategoryChart data={data.categoryBreakdown} />
       </section>
 
-      <RecentActivity />
+      <RecentActivity
+        expenses={data.recentExpenses}
+        invoices={data.recentInvoices}
+      />
     </div>
   );
 }
