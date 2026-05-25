@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
+import AiInsightsPanel from "@/components/dashboard/ai-insights-panel";
 import CategoryChart from "@/components/dashboard/category-chart";
 import ExpenseChart from "@/components/dashboard/expense-chart";
 import RecentActivity from "@/components/dashboard/recent-activity";
@@ -57,6 +58,8 @@ export default async function DashboardPage() {
         <ExpenseChart data={data.expenseTrend} />
         <CategoryChart data={data.categoryBreakdown} />
       </section>
+
+      <AiInsightsPanel />
 
       <RecentActivity
         expenses={data.recentExpenses}
