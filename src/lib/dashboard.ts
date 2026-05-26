@@ -9,6 +9,7 @@ import type {
   RecentInvoiceItem,
 } from "@/constants/dashboard";
 import { formatInr, formatInrCompact } from "@/lib/format-currency";
+import { formatMonthLabel, formatShortDate } from "@/lib/format-date";
 
 export type DashboardData = {
   stats: {
@@ -49,18 +50,11 @@ function getLastSixMonths() {
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
     months.push({
       key,
-      name: date.toLocaleString("en-US", { month: "short" }),
+      name: formatMonthLabel(date),
     });
   }
 
   return months;
-}
-
-function formatShortDate(value: Date | string) {
-  return new Date(value).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
 }
 
 function mapInvoiceStatus(

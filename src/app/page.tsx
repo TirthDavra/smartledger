@@ -1,14 +1,5 @@
-import Link from "next/link";
+import LandingPage from "@/components/landing/landing-page";
 
 export default function HomePage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <Link
-        href="/dashboard"
-        className="rounded-lg bg-black px-6 py-3 text-white"
-      >
-        Go To Dashboard
-      </Link>
-    </div>
-  );
+  return <LandingPage />;
 }

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { deleteInvoice } from "@/actions/invoice.actions";
+import { getClientErrorMessage } from "@/lib/errors";
 import {
   Dialog,
   DialogContent,
@@ -38,8 +40,9 @@ export default function DeleteInvoiceDialog({
         onSuccess();
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to delete invoice");
+      toast.error(
+        getClientErrorMessage(error, "Failed to delete invoice. Please try again.")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +67,14 @@ export default function DeleteInvoiceDialog({
             onClick={handleDelete}
             disabled={isLoading}
           >
-            {isLoading ? "Deleting..." : "Delete"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              "Delete"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

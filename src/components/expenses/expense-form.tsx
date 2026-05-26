@@ -33,7 +33,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { getClientErrorMessage } from "@/lib/errors";
 
 const CATEGORY_OPTIONS = [
   { value: "meals", label: "Meals" },
@@ -48,7 +50,7 @@ const CATEGORY_OPTIONS = [
 ];
 
 interface ExpenseFormProps {
-  initialData?: ExpenseFormOutput & { _id?: string };
+  initialData?: ExpenseFormInput & { _id?: string };
   onSuccess?: () => void;
 }
 
@@ -96,8 +98,9 @@ export default function ExpenseForm({
         onSuccess?.();
       }
     } catch (error) {
-      console.error(error);
-      toast.error("An error occurred");
+      toast.error(
+        getClientErrorMessage(error, "Could not save expense. Please try again.")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -209,11 +212,16 @@ export default function ExpenseForm({
 
             <Field>
               <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading
-                  ? "Saving..."
-                  : initialData?._id
-                    ? "Update Expense"
-                    : "Create Expense"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : initialData?._id ? (
+                  "Update Expense"
+                ) : (
+                  "Create Expense"
+                )}
               </Button>
             </Field>
           </FieldGroup>

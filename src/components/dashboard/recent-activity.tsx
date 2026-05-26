@@ -1,5 +1,7 @@
+import { Receipt, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type {
   RecentExpenseItem,
   RecentInvoiceItem,
@@ -34,9 +36,12 @@ export default function RecentActivity({
         </CardHeader>
         <CardContent className="space-y-4 px-5 pb-5 pt-0">
           {expenses.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-              No expenses recorded yet
-            </p>
+            <EmptyState
+              icon={Receipt}
+              title="No recent expenses"
+              description="New expenses will show up here once you add them."
+              className="min-h-40 border-0 bg-transparent py-4"
+            />
           ) : (
             expenses.map((item) => (
               <div
@@ -71,9 +76,12 @@ export default function RecentActivity({
         </CardHeader>
         <CardContent className="space-y-4 px-5 pb-5 pt-0">
           {invoices.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-              No invoices created yet
-            </p>
+            <EmptyState
+              icon={FileText}
+              title="No recent invoices"
+              description="Created invoices will appear here for quick reference."
+              className="min-h-40 border-0 bg-transparent py-4"
+            />
           ) : (
             invoices.map((item) => (
               <div

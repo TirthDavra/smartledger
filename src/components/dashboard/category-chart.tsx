@@ -8,7 +8,9 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { PieChart as PieChartIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { CategoryBreakdownItem } from "@/constants/dashboard";
 import { formatInrChart } from "@/lib/format-currency";
 
@@ -27,9 +29,9 @@ export default function CategoryChart({ data }: CategoryChartProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="px-5 pb-5 pt-0">
-        <div className="h-80 w-full">
+        <div className="h-64 w-full sm:h-80">
           {hasData ? (
-            <ResponsiveContainer width="100%" height="100%" minHeight={320}>
+            <ResponsiveContainer width="100%" height="100%" minHeight={240}>
               <PieChart>
                 <Pie
                   data={data}
@@ -61,11 +63,12 @@ export default function CategoryChart({ data }: CategoryChartProps) {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex h-full items-center justify-center">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                No expenses by category yet
-              </p>
-            </div>
+            <EmptyState
+              icon={PieChartIcon}
+              title="No category breakdown yet"
+              description="Categorized expenses will appear here as a pie chart."
+              className="min-h-48 border-0 bg-transparent"
+            />
           )}
         </div>
       </CardContent>

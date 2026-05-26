@@ -34,7 +34,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatInr } from "@/lib/format-currency";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { getClientErrorMessage } from "@/lib/errors";
 
 const STATUS_OPTIONS = [
   { value: "draft", label: "Draft" },
@@ -117,8 +119,9 @@ export default function InvoiceForm({
         onSuccess?.();
       }
     } catch (error) {
-      console.error(error);
-      toast.error("An error occurred");
+      toast.error(
+        getClientErrorMessage(error, "Could not save invoice. Please try again.")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -353,11 +356,16 @@ export default function InvoiceForm({
 
             <Field>
               <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading
-                  ? "Saving..."
-                  : initialData?._id
-                    ? "Update Invoice"
-                    : "Create Invoice"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : initialData?._id ? (
+                  "Update Invoice"
+                ) : (
+                  "Create Invoice"
+                )}
               </Button>
             </Field>
           </FieldGroup>

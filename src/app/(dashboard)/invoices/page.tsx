@@ -1,14 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { getUserInvoices } from "@/actions/invoice.actions";
 import InvoiceForm from "@/components/invoices/invoice-form";
 import InvoiceTable from "@/components/invoices/invoice-table";
 import SectionHeader from "@/components/dashboard/section-header";
 import { formatInr } from "@/lib/format-currency";
+import { formatDateForInput } from "@/lib/format-date";
+import { getClientErrorMessage } from "@/lib/errors";
 import { getTaxRateFromAmounts } from "@/lib/serialize-invoice";
 import type { InvoiceFormOutput } from "@/schemas/invoice.schema";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Select,
   SelectContent,
@@ -39,20 +44,20 @@ const STATUS_FILTER_OPTIONS = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
-function formatDateForInput(isoDate: string) {
-  return new Date(isoDate).toISOString().split("T")[0];
-}
-
 export default function InvoicesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const hasFilters = Boolean(searchQuery) || statusFilter !== "all";
+
   const loadInvoices = async () => {
     setIsLoading(true);
+    setFetchError(null);
     try {
       const result = await getUserInvoices(
         searchQuery || undefined,
@@ -60,14 +65,20 @@ export default function InvoicesPage() {
       );
 
       if (result.error) {
-        console.error(result.error);
+        setFetchError(result.error);
         setInvoices([]);
+        toast.error(result.error);
       } else {
         setInvoices(result.data || []);
       }
     } catch (error) {
-      console.error(error);
+      const message = getClientErrorMessage(
+        error,
+        "Could not load invoices. Check your connection and try again."
+      );
+      setFetchError(message);
       setInvoices([]);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -114,7 +125,7 @@ export default function InvoicesPage() {
         description="Create, track, and manage client invoices with dynamic line items."
       />
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_2fr]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <div>
           {isFormOpen ? (
             <>
@@ -128,9 +139,7 @@ export default function InvoicesPage() {
                         issueDate: formatDateForInput(
                           selectedInvoice.issueDate
                         ),
-                        dueDate: formatDateForInput(
-                          selectedInvoice.dueDate
-                        ),
+                        dueDate: formatDateForInput(selectedInvoice.dueDate),
                         lineItems: selectedInvoice.lineItems,
                         tax: getTaxRateFromAmounts(
                           selectedInvoice.subtotal,
@@ -142,50 +151,52 @@ export default function InvoicesPage() {
                 }
                 onSuccess={handleFormSuccess}
               />
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-4"
                 onClick={() => {
                   setIsFormOpen(false);
                   setSelectedInvoice(null);
                 }}
-                className="mt-4 text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
               >
                 ← Back to invoices
-              </button>
+              </Button>
             </>
           ) : (
             <div className="space-y-4">
-              <button
+              <Button
+                className="w-full"
                 onClick={() => {
                   setIsFormOpen(true);
                   setSelectedInvoice(null);
                 }}
-                className="w-full rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-primary/90 transition"
               >
                 + New Invoice
-              </button>
+              </Button>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <label className="text-sm font-medium text-foreground">
                   Summary
                 </label>
-                <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-900 space-y-3">
+                <div className="rounded-xl border border-border/60 bg-muted/30 space-y-3 p-4">
                   <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <p className="text-sm text-muted-foreground">
                       Paid Revenue
                     </p>
-                    <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                    <p className="text-2xl font-bold text-foreground">
                       {formatInr(totalRevenue)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <p className="text-sm text-muted-foreground">
                       Outstanding
                     </p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    <p className="text-lg font-semibold text-foreground">
                       {formatInr(outstandingTotal)}
                     </p>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-muted-foreground">
                     {invoices.length} invoices tracked
                   </p>
                 </div>
@@ -195,16 +206,15 @@ export default function InvoicesPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <Input
               placeholder="Search by client name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="border-slate-200/70 dark:border-slate-800/70"
             />
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="border-slate-200/70 dark:border-slate-800/70">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -218,16 +228,14 @@ export default function InvoicesPage() {
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <p className="text-slate-600 dark:text-slate-400">
-                Loading invoices...
-              </p>
-            </div>
+            <TableSkeleton />
           ) : (
             <InvoiceTable
               invoices={invoices}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              error={fetchError}
+              isFiltered={hasFilters}
             />
           )}
         </div>

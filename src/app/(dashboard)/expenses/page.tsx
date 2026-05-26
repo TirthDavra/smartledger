@@ -1,12 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { getUserExpenses } from "@/actions/expense.actions";
 import ExpenseForm from "@/components/expenses/expense-form";
 import ExpenseTable from "@/components/expenses/expense-table";
 import SectionHeader from "@/components/dashboard/section-header";
 import { formatInr } from "@/lib/format-currency";
+import { formatDateForInput } from "@/lib/format-date";
+import { getClientErrorMessage } from "@/lib/errors";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Select,
   SelectContent,
@@ -19,7 +24,16 @@ interface Expense {
   _id: string;
   title: string;
   amount: number;
-  category: "meals" | "software" | "operations" | "payroll" | "marketing" | "travel" | "utilities" | "office" | "other";
+  category:
+    | "meals"
+    | "software"
+    | "operations"
+    | "payroll"
+    | "marketing"
+    | "travel"
+    | "utilities"
+    | "office"
+    | "other";
   vendor: string;
   expenseDate: string;
   notes: string;
@@ -43,11 +57,15 @@ export default function ExpensesPage() {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
 
+  const hasFilters = Boolean(searchQuery) || categoryFilter !== "all";
+
   const loadExpenses = async () => {
     setIsLoading(true);
+    setFetchError(null);
     try {
       const result = await getUserExpenses(
         searchQuery || undefined,
@@ -55,14 +73,20 @@ export default function ExpensesPage() {
       );
 
       if (result.error) {
-        console.error(result.error);
+        setFetchError(result.error);
         setExpenses([]);
+        toast.error(result.error);
       } else {
         setExpenses(result.data || []);
       }
     } catch (error) {
-      console.error(error);
+      const message = getClientErrorMessage(
+        error,
+        "Could not load expenses. Check your connection and try again."
+      );
+      setFetchError(message);
       setExpenses([]);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +122,7 @@ export default function ExpensesPage() {
         description="Track and manage all your business expenses in one place."
       />
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_2fr]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <div>
           {isFormOpen ? (
             <>
@@ -110,9 +134,9 @@ export default function ExpensesPage() {
                         amount: selectedExpense.amount,
                         category: selectedExpense.category,
                         vendor: selectedExpense.vendor,
-                        expenseDate: new Date(
+                        expenseDate: formatDateForInput(
                           selectedExpense.expenseDate
-                        ).toISOString().split("T")[0] as any,
+                        ),
                         notes: selectedExpense.notes,
                         _id: selectedExpense._id,
                       }
@@ -120,40 +144,42 @@ export default function ExpensesPage() {
                 }
                 onSuccess={handleFormSuccess}
               />
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-4"
                 onClick={() => {
                   setIsFormOpen(false);
                   setSelectedExpense(null);
                 }}
-                className="mt-4 text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
               >
                 ← Back to expenses
-              </button>
+              </Button>
             </>
           ) : (
             <div className="space-y-4">
-              <button
+              <Button
+                className="w-full"
                 onClick={() => {
                   setIsFormOpen(true);
                   setSelectedExpense(null);
                 }}
-                className="w-full rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-primary/90 transition"
               >
                 + New Expense
-              </button>
+              </Button>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <label className="text-sm font-medium text-foreground">
                   Summary
                 </label>
-                <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-900">
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
+                  <p className="text-sm text-muted-foreground">
                     Total Expenses
                   </p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  <p className="text-2xl font-bold text-foreground">
                     {formatInr(expenses.reduce((sum, e) => sum + e.amount, 0))}
                   </p>
-                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                  <p className="mt-2 text-xs text-muted-foreground">
                     {expenses.length} expenses tracked
                   </p>
                 </div>
@@ -163,16 +189,15 @@ export default function ExpensesPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <Input
               placeholder="Search by title or vendor..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="border-slate-200/70 dark:border-slate-800/70"
             />
 
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="border-slate-200/70 dark:border-slate-800/70">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -186,16 +211,14 @@ export default function ExpensesPage() {
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <p className="text-slate-600 dark:text-slate-400">
-                Loading expenses...
-              </p>
-            </div>
+            <TableSkeleton />
           ) : (
             <ExpenseTable
               expenses={expenses}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              error={fetchError}
+              isFiltered={hasFilters}
             />
           )}
         </div>

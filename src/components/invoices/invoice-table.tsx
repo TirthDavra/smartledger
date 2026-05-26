@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { AlertCircle, FileText, Pencil, Trash2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatInr } from "@/lib/format-currency";
+import { formatDisplayDate } from "@/lib/format-date";
 import DeleteInvoiceDialog from "./delete-invoice-dialog";
 import type { InvoiceFormOutput } from "@/schemas/invoice.schema";
 
@@ -37,55 +39,66 @@ interface InvoiceTableProps {
   invoices: Invoice[];
   onEdit: (invoice: Invoice) => void;
   onDelete: () => void;
+  error?: string | null;
+  isFiltered?: boolean;
 }
 
 export default function InvoiceTable({
   invoices,
   onEdit,
   onDelete,
+  error,
+  isFiltered,
 }: InvoiceTableProps) {
   const [deleteInvoiceId, setDeleteInvoiceId] = useState<string | null>(null);
 
+  if (error) {
+    return (
+      <EmptyState
+        icon={AlertCircle}
+        title="Could not load invoices"
+        description={error}
+      />
+    );
+  }
+
   if (invoices.length === 0) {
     return (
-      <Card className="border border-slate-200/70 bg-white/80 shadow-sm dark:border-slate-800/70 dark:bg-slate-950/60">
-        <CardContent className="flex min-h-96 items-center justify-center">
-          <div className="text-center">
-            <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              No invoices yet
-            </p>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Create your first invoice to get started
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <EmptyState
+        icon={FileText}
+        title={isFiltered ? "No matching invoices" : "No invoices yet"}
+        description={
+          isFiltered
+            ? "Try adjusting your search or status filter."
+            : "Create your first invoice to start tracking client billing."
+        }
+      />
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="hidden md:block overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <Card className="border border-slate-200/70 bg-white/80 shadow-sm dark:border-slate-800/70 dark:bg-slate-950/60">
-          <table className="w-full">
+          <table className="w-full min-w-[640px]">
             <thead>
               <tr className="border-b border-slate-200/70 bg-slate-50/50 dark:border-slate-800/70 dark:bg-slate-900/50">
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <th className="px-4 py-3 text-left text-sm font-semibold sm:px-6 sm:py-4">
                   Invoice #
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <th className="px-4 py-3 text-left text-sm font-semibold sm:px-6 sm:py-4">
                   Client
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <th className="px-4 py-3 text-left text-sm font-semibold sm:px-6 sm:py-4">
                   Status
                 </th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <th className="px-4 py-3 text-right text-sm font-semibold sm:px-6 sm:py-4">
                   Total
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <th className="hidden px-4 py-3 text-left text-sm font-semibold sm:table-cell sm:px-6 sm:py-4">
                   Due Date
                 </th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <th className="px-4 py-3 text-center text-sm font-semibold sm:px-6 sm:py-4">
                   Actions
                 </th>
               </tr>
@@ -94,29 +107,29 @@ export default function InvoiceTable({
               {invoices.map((invoice) => (
                 <tr
                   key={invoice._id}
-                  className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors"
+                  className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/50"
                 >
-                  <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <td className="px-4 py-3 text-sm font-medium sm:px-6 sm:py-4">
                     {invoice.invoiceNumber}
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
+                  <td className="px-4 py-3 text-sm text-muted-foreground sm:px-6 sm:py-4">
                     {invoice.clientName}
                   </td>
-                  <td className="px-6 py-4 text-sm">
+                  <td className="px-4 py-3 text-sm sm:px-6 sm:py-4">
                     <span
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[invoice.status]}`}
                     >
                       {STATUS_LABELS[invoice.status]}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  <td className="px-4 py-3 text-right text-sm font-semibold sm:px-6 sm:py-4">
                     {formatInr(invoice.total)}
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
-                    {new Date(invoice.dueDate).toLocaleDateString()}
+                  <td className="hidden px-4 py-3 text-sm text-muted-foreground sm:table-cell sm:px-6 sm:py-4">
+                    {formatDisplayDate(invoice.dueDate)}
                   </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex justify-center gap-2">
+                  <td className="px-4 py-3 text-center sm:px-6 sm:py-4">
+                    <div className="flex justify-center gap-1">
                       <Button
                         variant="ghost"
                         size="icon-sm"
@@ -142,55 +155,51 @@ export default function InvoiceTable({
         </Card>
       </div>
 
-      <div className="md:hidden space-y-3">
+      <div className="space-y-3 md:hidden">
         {invoices.map((invoice) => (
           <Card
             key={invoice._id}
-            className="border border-slate-200/70 bg-white/80 shadow-sm dark:border-slate-800/70 dark:bg-slate-950/60"
+            className="border border-slate-200/70 bg-white/80 p-4 shadow-sm dark:border-slate-800/70 dark:bg-slate-950/60"
           >
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">
-                    {invoice.invoiceNumber}
-                  </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {invoice.clientName}
-                  </p>
-                </div>
-                <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                  {formatInr(invoice.total)}
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold truncate">{invoice.invoiceNumber}</p>
+                <p className="text-sm text-muted-foreground truncate">
+                  {invoice.clientName}
                 </p>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2 items-center">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[invoice.status]}`}
-                  >
-                    {STATUS_LABELS[invoice.status]}
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    Due {new Date(invoice.dueDate).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => onEdit(invoice)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => setDeleteInvoiceId(invoice._id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
+              <p className="shrink-0 text-lg font-bold">
+                {formatInr(invoice.total)}
+              </p>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[invoice.status]}`}
+                >
+                  {STATUS_LABELS[invoice.status]}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Due {formatDisplayDate(invoice.dueDate)}
+                </span>
               </div>
-            </CardContent>
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => onEdit(invoice)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setDeleteInvoiceId(invoice._id)}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
           </Card>
         ))}
       </div>

@@ -10,8 +10,10 @@ import {
   CartesianGrid,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { ChartDataPoint } from "@/constants/dashboard";
 import { formatInrChart } from "@/lib/format-currency";
+import { BarChart3 } from "lucide-react";
 
 interface ExpenseChartProps {
   data: ChartDataPoint[];
@@ -28,9 +30,9 @@ export default function ExpenseChart({ data }: ExpenseChartProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="px-5 pb-5 pt-0">
-        <div className="h-80 w-full">
+        <div className="h-64 w-full sm:h-80">
           {hasData ? (
-            <ResponsiveContainer width="100%" height="100%" minHeight={320}>
+            <ResponsiveContainer width="100%" height="100%" minHeight={240}>
               <LineChart
                 data={data}
                 margin={{ top: 10, right: 16, left: -12, bottom: 0 }}
@@ -75,11 +77,12 @@ export default function ExpenseChart({ data }: ExpenseChartProps) {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex h-full items-center justify-center">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                No expense data for the last 6 months
-              </p>
-            </div>
+            <EmptyState
+              icon={BarChart3}
+              title="No expense trend yet"
+              description="Add expenses over the last six months to see your monthly chart."
+              className="min-h-48 border-0 bg-transparent"
+            />
           )}
         </div>
       </CardContent>
