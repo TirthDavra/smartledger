@@ -1,7 +1,9 @@
 "use client"
 
 
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { getClientErrorMessage } from "@/lib/errors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { registerSchema } from "@/schemas/auth.schema";
@@ -37,18 +39,24 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(registerSchema),
   });
 
   const onSubmit = async (data: FormData) => {
-    const response = await registerUser(data);
-    if (response.error) {
-      toast.error(response?.error || "Something went wrong");
-    } else {
-      toast.success(response?.success || "Account created successfully");
-      route.push("/login");
+    try {
+      const response = await registerUser(data);
+      if (response.error) {
+        toast.error(response.error);
+      } else {
+        toast.success(response.success || "Account created successfully");
+        route.push("/login");
+      }
+    } catch (error) {
+      toast.error(
+        getClientErrorMessage(error, "Could not create account. Please try again.")
+      );
     }
   };
 
@@ -72,6 +80,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                   type="text"
                   placeholder="John Doe"
                   required
+                  disabled={isSubmitting}
                 />
               </FieldContent>
               <FieldError errors={errors.name ? [errors.name] : undefined} />
@@ -85,6 +94,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                   type="email"
                   placeholder="m@example.com"
                   required
+                  disabled={isSubmitting}
                 />
               </FieldContent>
               <FieldDescription>
@@ -101,6 +111,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                   id="password"
                   type="password"
                   required
+                  disabled={isSubmitting}
                 />
               </FieldContent>
               <FieldDescription>
@@ -110,8 +121,15 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
             </Field>
 
             <div className="flex flex-col gap-3 pt-3">
-              <Button type="submit" className="w-full">
-                Create Account
+              <Button type="submit" disabled={isSubmitting} className="w-full">
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
               </Button>
               <p className="text-center text-sm text-muted-foreground">
                 Already have an account? <Link className="text-primary underline" href="/login">Sign in</Link>

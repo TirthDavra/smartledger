@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -40,27 +41,31 @@ export function LoginForm({
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: FormData) => {
-    const response = await signIn("credentials", {
-      email: data.email,
-      password: data.password,
-      redirect: false,
-    });
+    try {
+      const response = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
 
-    if (response?.error) {
-      setError(response.error);
-      toast.error(response?.error || "Something went wrong");
-      return;
+      if (response?.error) {
+        setError(response.error);
+        toast.error(response.error || "Invalid email or password");
+        return;
+      }
+
+      setError("");
+      toast.success("Logged in successfully");
+      route.push("/dashboard");
+    } catch {
+      toast.error("Could not sign in. Please try again.");
     }
-
-    setError("");
-    toast.success("Logged in successfully");
-    route.push("/dashboard");
   };
 
   return (
@@ -82,6 +87,7 @@ export function LoginForm({
                 type="email"
                 placeholder="m@example.com"
                 required
+                disabled={isSubmitting}
               />
               <FieldError errors={errors.email ? [errors.email] : undefined} />
             </Field>
@@ -94,11 +100,21 @@ export function LoginForm({
                 id="password"
                 type="password"
                 required
+                disabled={isSubmitting}
               />
               <FieldError errors={errors.password ? [errors.password] : undefined} />
             </Field>
             <Field>
-              <Button type="submit">Login</Button>
+              <Button type="submit" disabled={isSubmitting} className="w-full">
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Login"
+                )}
+              </Button>
               <FieldDescription className="text-center">
                 Don&apos;t have an account? <Link href="/register">Sign up</Link>
               </FieldDescription>

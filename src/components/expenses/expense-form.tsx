@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createExpense, updateExpense } from "@/actions/expense.actions";
@@ -58,12 +57,10 @@ export default function ExpenseForm({
   initialData,
   onSuccess,
 }: ExpenseFormProps) {
-  const [isLoading, setIsLoading] = useState(false);
-
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     setValue,
     watch,
   } = useForm<ExpenseFormInput, unknown, ExpenseFormOutput>({
@@ -77,15 +74,10 @@ export default function ExpenseForm({
   const category = watch("category");
 
   const onSubmit = async (data: ExpenseFormOutput) => {
-    setIsLoading(true);
     try {
-      let result;
-
-      if (initialData?._id) {
-        result = await updateExpense(initialData._id, data);
-      } else {
-        result = await createExpense(data);
-      }
+      const result = initialData?._id
+        ? await updateExpense(initialData._id, data)
+        : await createExpense(data);
 
       if (result.error) {
         toast.error(result.error);
@@ -101,8 +93,6 @@ export default function ExpenseForm({
       toast.error(
         getClientErrorMessage(error, "Could not save expense. Please try again.")
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -127,7 +117,7 @@ export default function ExpenseForm({
                 {...register("title")}
                 id="title"
                 placeholder="e.g., Team lunch"
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
               <FieldError errors={errors.title ? [errors.title] : undefined} />
             </Field>
@@ -140,7 +130,7 @@ export default function ExpenseForm({
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
               <FieldError
                 errors={errors.amount ? [errors.amount] : undefined}
@@ -155,7 +145,7 @@ export default function ExpenseForm({
                   setValue("category", value as ExpenseFormOutput["category"])
                 }
               >
-                <SelectTrigger id="category" disabled={isLoading}>
+                <SelectTrigger id="category" disabled={isSubmitting}>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -177,7 +167,7 @@ export default function ExpenseForm({
                 {...register("vendor")}
                 id="vendor"
                 placeholder="e.g., Restaurant name"
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
               <FieldError
                 errors={errors.vendor ? [errors.vendor] : undefined}
@@ -190,7 +180,7 @@ export default function ExpenseForm({
                 {...register("expenseDate")}
                 id="expenseDate"
                 type="date"
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
               <FieldError
                 errors={errors.expenseDate ? [errors.expenseDate] : undefined}
@@ -203,7 +193,7 @@ export default function ExpenseForm({
                 {...register("notes")}
                 id="notes"
                 placeholder="Add any additional notes..."
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
               <FieldError
                 errors={errors.notes ? [errors.notes] : undefined}
@@ -211,8 +201,8 @@ export default function ExpenseForm({
             </Field>
 
             <Field>
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading ? (
+              <Button type="submit" disabled={isSubmitting} className="w-full">
+                {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...

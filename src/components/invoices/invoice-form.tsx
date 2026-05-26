@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
@@ -55,13 +55,11 @@ export default function InvoiceForm({
   initialData,
   onSuccess,
 }: InvoiceFormProps) {
-  const [isLoading, setIsLoading] = useState(false);
-
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     setValue,
     watch,
   } = useForm<InvoiceFormInput, unknown, InvoiceFormOutput>({
@@ -98,15 +96,10 @@ export default function InvoiceForm({
   }, [lineItems, taxRate]);
 
   const onSubmit = async (data: InvoiceFormOutput) => {
-    setIsLoading(true);
     try {
-      let result;
-
-      if (initialData?._id) {
-        result = await updateInvoice(initialData._id, data);
-      } else {
-        result = await createInvoice(data);
-      }
+      const result = initialData?._id
+        ? await updateInvoice(initialData._id, data)
+        : await createInvoice(data);
 
       if (result.error) {
         toast.error(result.error);
@@ -122,8 +115,6 @@ export default function InvoiceForm({
       toast.error(
         getClientErrorMessage(error, "Could not save invoice. Please try again.")
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -148,7 +139,7 @@ export default function InvoiceForm({
                 {...register("clientName")}
                 id="clientName"
                 placeholder="e.g., Acme Corp"
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
               <FieldError
                 errors={errors.clientName ? [errors.clientName] : undefined}
@@ -161,7 +152,7 @@ export default function InvoiceForm({
                 {...register("invoiceNumber")}
                 id="invoiceNumber"
                 placeholder="e.g., INV-2026-001"
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
               <FieldError
                 errors={
@@ -178,7 +169,7 @@ export default function InvoiceForm({
                   setValue("status", value as InvoiceFormOutput["status"])
                 }
               >
-                <SelectTrigger id="status" disabled={isLoading}>
+                <SelectTrigger id="status" disabled={isSubmitting}>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -201,7 +192,7 @@ export default function InvoiceForm({
                   {...register("issueDate")}
                   id="issueDate"
                   type="date"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 />
                 <FieldError
                   errors={errors.issueDate ? [errors.issueDate] : undefined}
@@ -214,7 +205,7 @@ export default function InvoiceForm({
                   {...register("dueDate")}
                   id="dueDate"
                   type="date"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 />
                 <FieldError
                   errors={errors.dueDate ? [errors.dueDate] : undefined}
@@ -229,7 +220,7 @@ export default function InvoiceForm({
                   type="button"
                   variant="outline"
                   size="sm"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   onClick={() => append({ title: "", quantity: 1, price: 0.01 })}
                 >
                   <Plus className="mr-1 h-4 w-4" />
@@ -256,7 +247,7 @@ export default function InvoiceForm({
                           type="button"
                           variant="ghost"
                           size="icon-sm"
-                          disabled={isLoading}
+                          disabled={isSubmitting}
                           onClick={() => remove(index)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
@@ -267,7 +258,7 @@ export default function InvoiceForm({
                       <Input
                         {...register(`lineItems.${index}.title`)}
                         placeholder="Item title"
-                        disabled={isLoading}
+                        disabled={isSubmitting}
                       />
                       <FieldError
                         errors={
@@ -284,7 +275,7 @@ export default function InvoiceForm({
                             step="0.01"
                             min="0.01"
                             placeholder="Qty"
-                            disabled={isLoading}
+                            disabled={isSubmitting}
                           />
                           <FieldError
                             errors={
@@ -301,7 +292,7 @@ export default function InvoiceForm({
                             step="0.01"
                             min="0.01"
                             placeholder="Price"
-                            disabled={isLoading}
+                            disabled={isSubmitting}
                           />
                           <FieldError
                             errors={
@@ -328,7 +319,7 @@ export default function InvoiceForm({
                 min="0"
                 max="100"
                 placeholder="0"
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
               <FieldError errors={errors.tax ? [errors.tax] : undefined} />
             </Field>
@@ -355,8 +346,8 @@ export default function InvoiceForm({
             </div>
 
             <Field>
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading ? (
+              <Button type="submit" disabled={isSubmitting} className="w-full">
+                {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
