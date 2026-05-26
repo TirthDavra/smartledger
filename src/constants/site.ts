@@ -1,4 +1,3 @@
-/** Site-wide author and social links (assignment footer requirement). */
 export const siteConfig = {
   name: "SmartLedger Lite",
   description:
