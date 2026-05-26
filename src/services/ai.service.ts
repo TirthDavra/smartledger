@@ -31,6 +31,7 @@ Rules:
 - Do NOT use markdown.
 - Do NOT use bullet symbols.
 - Keep each insight under 20 words.
+- Always use ruppees (₹) as the currency.
 - Focus on revenue, expenses, pending invoices, and spending patterns.
 - Keep tone professional and business-focused.
 
